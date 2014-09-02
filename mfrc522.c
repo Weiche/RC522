@@ -18,6 +18,10 @@
  */
 #include "mfrc522.h"
 #include <stdint.h>
+void MFRC522_HAL_init(void) ;
+void MFRC522_HAL_write(unsigned char addr, unsigned char val) ;
+unsigned char MFRC522_HAL_read(unsigned char addr);
+
 void MFRC522_Init(void) {
 	MFRC522_HAL_init();
 	MFRC522_Reset();
@@ -59,11 +63,11 @@ MFRC522_Status_t MFRC522_Compare(uint8_t* CardID, uint8_t* CompareID) {
 
 
 void MFRC522_WriteRegister(uint8_t addr, uint8_t val){
-	MFRC522_HAL_writeRegister(addr,val);
+	MFRC522_HAL_write(addr,val);
 }
 
 uint8_t MFRC522_ReadRegister(uint8_t addr){
-	return MFRC522_HAL_readRegister(addr);
+	return MFRC522_HAL_read(addr);
 }
 
 void MFRC522_SetBitMask(uint8_t reg, uint8_t mask) {

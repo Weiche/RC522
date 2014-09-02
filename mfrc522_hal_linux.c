@@ -86,7 +86,7 @@ void MFRC522_HAL_init(void) {
 
 }
 
-void MFRC522_HAL_writeMFRC522(unsigned char addr, unsigned char val) {
+void MFRC522_HAL_write(unsigned char addr, unsigned char val) {
 	int ret;
 	char _dummytx[2];
 	static char _devnull[2];
@@ -109,7 +109,7 @@ void MFRC522_HAL_writeMFRC522(unsigned char addr, unsigned char val) {
  *  Los par�metros de entrada: addr - la direcci�n de registro
  *  Valor de retorno: Devuelve un byte de datos de lectura
  */
-unsigned char MFRC522_HAL_readMFRC522(unsigned char addr) {
+unsigned char MFRC522_HAL_read(unsigned char addr) {
 	int ret;
 	char _dummytx[2];
 	char _rxbuf[2];
