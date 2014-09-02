@@ -1,7 +1,7 @@
 /*
  * mfrc522_hal.c
  *
- *  Created on: 2014Äê9ÔÂ2ÈÕ
+ *  Created on: 2014ï¿½ï¿½9ï¿½ï¿½2ï¿½ï¿½
  *      Author: Administrator
  */
 #include <stdint.h>
@@ -24,7 +24,7 @@ static struct spi_ioc_transfer spixfr;
 
 static uint32_t mode = SPI_MODE_0;
 static uint8_t bits = 8;
-static uint32_t speed = 5000000;
+static uint32_t speed = 10000000;
 static void pabort(const char *s)
 {
 	perror(s);
@@ -113,7 +113,7 @@ unsigned char MFRC522_HAL_read(unsigned char addr) {
 	int ret;
 	char _dummytx[2];
 	char _rxbuf[2];
-	_dummytx[0] = (addr << 1) & 0x7E;
+	_dummytx[0] = ((addr << 1) & 0xFE)|0x80;
 	_dummytx[1] = 0xFF;
 
 	spixfr.tx_buf = (unsigned long) _dummytx;
