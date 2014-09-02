@@ -40,6 +40,7 @@ typedef unsigned char bool ;
 #define MI_OK                 0
 #define MI_NOTAGERR           1
 #define MI_ERR                2
+#define MI_TIMEOUT			  3
 
 //------------------ MFRC522 registro---------------
 //Page 0:Command and Status
