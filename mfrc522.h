@@ -3,7 +3,7 @@
  * It works on 13.56 MHz.
  *
  * This library uses SPI for driving MFRC255 chip.
- *
+ *origin
  *	@author 	Tilen Majerle
  *	@email		tilen@majerle.eu
  *	@website	http://stm32f4-discovery.com
@@ -11,9 +11,11 @@
  *	@version 	v1.0
  *	@ide		Keil uVision
  *	@license	GNU GPL v3
- *	
+ *this
+ * @author GiTetsu
+ * @mail   gitetsu88@gmail.com
  * |----------------------------------------------------------------------
- * | Copyright (C) Tilen Majerle, 2014
+ * | Copyright (C) Tilen Majerle,Gitetsu 2014
  * | 
  * | This program is free software: you can redistribute it and/or modify
  * | it under the terms of the GNU General Public License as published by
@@ -28,28 +30,6 @@
  * | You should have received a copy of the GNU General Public License
  * | along with this program.  If not, see <http://www.gnu.org/licenses/>.
  * |----------------------------------------------------------------------
- * 	
- * MF RC522 Default pinout
- * 
- * 		MFRC522		STM32F4XX	DESCRIPTION
- *		CS (SDA)	PG2			Chip select for SPI
- *		SCK			PB3			Serial Clock for SPI
- *		MISO		PB4			Master In Slave Out for SPI
- *		MOSI		PB5			Master Out Slave In for SPI
- *		GND			GND			Ground
- *		VCC			3.3V		3.3V power
- *		RST			3.3V		Reset pin
- *		
- * You can change your pinout in your defines.h file:
- * 
- *  //Select SPI, for SPI pins look at TM SPI library
- *	#define MFRC522_SPI						SPI1
- *	#define MFRC522_SPI_PINSPACK			TM_SPI_PinsPack_2
- *	
- *	//Default CS pin for SPI
- *	#define MFRC522_CS_RCC					RCC_AHB1Periph_GPIOG
- *	#define MFRC522_CS_PORT					GPIOG
- *	#define MFRC522_CS_PIN					GPIO_Pin_2
  */
 #ifndef MFRC522_H
 #define MFRC522_H 100
