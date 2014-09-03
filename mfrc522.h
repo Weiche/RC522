@@ -192,7 +192,7 @@ typedef enum {
  * Prepare MFRC522 to work with RFIDs
  *
  */
-extern void MFRC522_Init(void);
+extern int MFRC522_Init(void);
 
 /**
  * Check for RFID card existance
@@ -223,11 +223,11 @@ extern MFRC522_Status_t MFRC522_Compare(uint8_t* CardID, uint8_t* CompareID);
 /**
  * Private functions
  */
-extern void MFRC522_InitPins(void);
 extern void MFRC522_WriteRegister(uint8_t addr, uint8_t val);
 extern uint8_t MFRC522_ReadRegister(uint8_t addr);
 extern void MFRC522_SetBitMask(uint8_t reg, uint8_t mask);
 extern void MFRC522_ClearBitMask(uint8_t reg, uint8_t mask);
+
 extern void MFRC522_AntennaOn(void);
 extern void MFRC522_AntennaOff(void);
 extern void MFRC522_Reset(void);
@@ -236,6 +236,7 @@ extern MFRC522_Status_t MFRC522_ToCard(uint8_t command, uint8_t* sendData, uint8
 extern MFRC522_Status_t MFRC522_Anticoll(uint8_t* serNum);
 extern void MFRC522_CalculateCRC(uint8_t* pIndata, uint8_t len, uint8_t* pOutData);
 extern uint8_t MFRC522_SelectTag(uint8_t* serNum);
+
 extern MFRC522_Status_t MFRC522_Auth(uint8_t authMode, uint8_t BlockAddr, uint8_t* Sectorkey, uint8_t* serNum);
 extern MFRC522_Status_t MFRC522_Read(uint8_t blockAddr, uint8_t* recvData);
 extern MFRC522_Status_t MFRC522_Write(uint8_t blockAddr, uint8_t* writeData);

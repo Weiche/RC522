@@ -18,23 +18,31 @@
  */
 #include "mfrc522.h"
 #include <stdint.h>
-#include <unistd.h>
+/* HAL prototypes*/
 void MFRC522_HAL_init(void);
 void MFRC522_HAL_write(unsigned char addr, unsigned char val);
 unsigned char MFRC522_HAL_read(unsigned char addr);
+void MFRC522_HAL_Delay(unsigned int ms);
+/* HAL prototypes end */
 
-void MFRC522_Init(void) {
-	volatile char test;
+int MFRC522_Init(void) {
+
 	MFRC522_HAL_init();
 	MFRC522_Reset();
-	sleep(1);
+	MFRC522_HAL_Delay(200);
 	MFRC522_WriteRegister(MFRC522_REG_T_MODE, 0x8D);
 
 	MFRC522_WriteRegister(MFRC522_REG_T_PRESCALER, 0x3E);
+#ifndef NOTEST
+	{
+		/* test read and write reg functions */
+	volatile char test;
 	test = MFRC522_ReadRegister(MFRC522_REG_T_PRESCALER);
 	if (test != 0x3E) {
-		return;
+		return -1;
 	}
+	}
+#endif
 	MFRC522_WriteRegister(MFRC522_REG_T_RELOAD_L, 30);
 	MFRC522_WriteRegister(MFRC522_REG_T_RELOAD_H, 0);
 
@@ -42,6 +50,7 @@ void MFRC522_Init(void) {
 	MFRC522_WriteRegister(MFRC522_REG_MODE, 0x3D);
 
 	MFRC522_AntennaOn();		//Open the antenna
+	return 0;
 }
 
 MFRC522_Status_t MFRC522_Check(uint8_t* id) {

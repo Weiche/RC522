@@ -30,6 +30,9 @@ static void pabort(const char *s)
 	perror(s);
 	abort();
 }
+void MFRC522_HAL_Delay(unsigned int ms){
+	usleep(ms * 1000);
+}
 void MFRC522_HAL_init(void) {
 	int ret;
 
