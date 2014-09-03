@@ -111,9 +111,10 @@ int main(void) {
 
 			}
 		}
-		End: fflush(stdout);
+		End:
+		fflush(stdout);
 		MFRC522_Halt();
-		sleep(1);
+		usleep(500 * 1000);
 	}
 	return 0;
 }

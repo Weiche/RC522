@@ -23,8 +23,9 @@ void MFRC522_HAL_init(void);
 void MFRC522_HAL_write(unsigned char addr, unsigned char val);
 unsigned char MFRC522_HAL_read(unsigned char addr);
 void MFRC522_HAL_Delay(unsigned int ms);
-/* HAL prototypes end */
 
+/* HAL prototypes end */
+static int Checking_Card = 0;
 int MFRC522_Init(char Type) {
 
 	MFRC522_HAL_init();
@@ -63,13 +64,16 @@ int MFRC522_Init(char Type) {
 
 MFRC522_Status_t MFRC522_Check(uint8_t* id) {
 	MFRC522_Status_t status;
+	Checking_Card = 1;
 	//Find cards, return card type
 	status = MFRC522_Request(PICC_REQIDL, id);
+	Checking_Card = 0;
 	if (status == MI_OK) {
 		//Card detected
 		//Anti-collision, return card serial number 4 bytes
 		status = MFRC522_Anticoll(id);
 	}
+
 	return status;
 }
 
@@ -182,6 +186,11 @@ MFRC522_Status_t MFRC522_ToCard(uint8_t command, uint8_t* sendData,
 	do {
 		//CommIrqReg[7..0]
 		//Set1 TxIRq RxIRq IdleIRq HiAlerIRq LoAlertIRq ErrIRq TimerIRq
+		if( Checking_Card ){
+			MFRC522_HAL_Delay(16);
+		}else{
+			MFRC522_HAL_Delay(2);
+		}
 		n = MFRC522_ReadRegister(MFRC522_REG_COMM_IRQ);
 		i--;
 	} while ((i != 0) && !(n & 0x01) && !(n & waitIRq));
