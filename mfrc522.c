@@ -25,7 +25,7 @@ unsigned char MFRC522_HAL_read(unsigned char addr);
 void MFRC522_HAL_Delay(unsigned int ms);
 /* HAL prototypes end */
 
-int MFRC522_Init( char Type ) {
+int MFRC522_Init(char Type) {
 
 	MFRC522_HAL_init();
 	MFRC522_Reset();
@@ -35,11 +35,11 @@ int MFRC522_Init( char Type ) {
 #ifndef NOTEST
 	{
 		/* test read and write reg functions */
-	volatile char test;
-	test = MFRC522_ReadRegister(MFRC522_REG_T_PRESCALER);
-	if (test != 0x3E) {
-		return -1;
-	}
+		volatile char test;
+		test = MFRC522_ReadRegister(MFRC522_REG_T_PRESCALER);
+		if (test != 0x3E) {
+			return -1;
+		}
 	}
 #endif
 	MFRC522_WriteRegister(MFRC522_REG_T_RELOAD_L, 30);
@@ -70,8 +70,6 @@ MFRC522_Status_t MFRC522_Check(uint8_t* id) {
 		//Anti-collision, return card serial number 4 bytes
 		status = MFRC522_Anticoll(id);
 	}
-	MFRC522_Halt();			//Command card into hibernation
-
 	return status;
 }
 
@@ -127,11 +125,11 @@ MFRC522_Status_t MFRC522_Request(uint8_t reqMode, uint8_t* TagType) {
 	TagType[0] = reqMode;
 	status = MFRC522_ToCard(PCD_TRANSCEIVE, TagType, 1, TagType, &backBits);
 
-	if ((status != MI_OK) ) {
+	if ((status != MI_OK)) {
 		status = MI_ERR;
-	}else if(backBits != 0x10){
+	} else if (backBits != 0x10) {
 		status = MI_ERR;
-	}else{
+	} else {
 		status = MI_OK;
 	}
 
@@ -195,7 +193,7 @@ MFRC522_Status_t MFRC522_ToCard(uint8_t command, uint8_t* sendData,
 
 			if (n & irqEn & 0x01) {
 				status = MI_NOTAGERR;
-			}else{
+			} else {
 				status = MI_OK;
 			}
 
@@ -245,6 +243,7 @@ MFRC522_Status_t MFRC522_Anticoll(uint8_t* serNum) {
 		for (i = 0; i < 4; i++) {
 			serNumCheck ^= serNum[i];
 		}
+		/* check sum with last byte*/
 		if (serNumCheck != serNum[i]) {
 			status = MI_ERR;
 		}
@@ -282,14 +281,14 @@ uint8_t MFRC522_SelectTag(uint8_t* serNum) {
 	MFRC522_Status_t status;
 	uint8_t size;
 	uint16_t recvBits;
-	uint8_t buffer[9];
+	uint8_t buffer[32] = "";
 
 	buffer[0] = PICC_SElECTTAG;
 	buffer[1] = 0x70;
 	for (i = 0; i < 5; i++) {
 		buffer[i + 2] = *(serNum + i);
 	}
-	MFRC522_CalculateCRC(buffer, 7, &buffer[7]);		//??
+	MFRC522_CalculateCRC(buffer, 7, &buffer[7]);	//Fill [7:8] with 2byte CRC
 	status = MFRC522_ToCard(PCD_TRANSCEIVE, buffer, 9, buffer, &recvBits);
 
 	if ((status == MI_OK) && (recvBits == 0x18)) {
@@ -340,7 +339,7 @@ MFRC522_Status_t MFRC522_Read(uint8_t blockAddr, uint8_t* recvData) {
 		status = MI_ERR;
 	}
 
-	return status;
+	return unLen;
 }
 
 MFRC522_Status_t MFRC522_Write(uint8_t blockAddr, uint8_t* writeData) {
@@ -386,3 +385,57 @@ void MFRC522_Halt(void) {
 	MFRC522_ToCard(PCD_TRANSCEIVE, buff, 4, buff, &unLen);
 }
 
+char *PICC_TYPE_STRING[] = {
+		"PICC_TYPE_NOT_COMPLETE",
+		"PICC_TYPE_MIFARE_MINI",
+		"PICC_TYPE_MIFARE_1K",
+		"PICC_TYPE_MIFARE_4K",
+		"PICC_TYPE_MIFARE_UL",
+		"PICC_TYPE_MIFARE_PLUS",
+		"PICC_TYPE_TNP3XXX",
+		"PICC_TYPE_ISO_14443_4",
+		"PICC_TYPE_ISO_18092",
+		"PICC_TYPE_UNKNOWN"
+};
+char *MFRC522_DumpType(PICC_TYPE_t type){
+	return PICC_TYPE_STRING[type];
+}
+int MFRC522_ParseType(uint8_t TagSelectRet) {
+	if (TagSelectRet & 0x04) { // UID not complete
+		return PICC_TYPE_NOT_COMPLETE;
+	}
+
+	switch (TagSelectRet) {
+	case 0x09:
+		return PICC_TYPE_MIFARE_MINI;
+		break;
+	case 0x08:
+		return PICC_TYPE_MIFARE_1K;
+		break;
+	case 0x18:
+		return PICC_TYPE_MIFARE_4K;
+		break;
+	case 0x00:
+		return PICC_TYPE_MIFARE_UL;
+		break;
+	case 0x10:
+	case 0x11:
+		return PICC_TYPE_MIFARE_PLUS;
+		break;
+	case 0x01:
+		return PICC_TYPE_TNP3XXX;
+		break;
+	default:
+		break;
+	}
+
+	if (TagSelectRet & 0x20) {
+		return PICC_TYPE_ISO_14443_4;
+	}
+
+	if (TagSelectRet & 0x40) {
+		return PICC_TYPE_ISO_18092;
+	}
+
+	return PICC_TYPE_UNKNOWN;
+}

@@ -15,7 +15,7 @@
 #include <linux/types.h>
 #include <linux/spi/spidev.h>
 
-#define RFID_DEBUG(a)	puts(a"\r\n")
+#define RFID_DEBUG(a)	puts(a)
 #define RFID_DEBUGF		printf
 #define SPI_DEV "/dev/spidev1.0"
 #define RFID_DelayMs(s)	usleep(s*1000)

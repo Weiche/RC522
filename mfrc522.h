@@ -56,11 +56,12 @@
  *
  * Used with most functions
  */
-typedef enum {
-	MI_OK = 0,
-	MI_NOTAGERR,
-	MI_ERR
-} MFRC522_Status_t;
+
+#define 	MI_OK		(0)
+#define 	MI_NOTAGERR (-1)
+#define 	MI_ERR		(-2)
+
+typedef int MFRC522_Status_t;
 
 #define MFRC522_CS_LOW					MFRC522_CS_PORT->BSRRH = MFRC522_CS_PIN;
 #define MFRC522_CS_HIGH					MFRC522_CS_PORT->BSRRL = MFRC522_CS_PIN;
@@ -88,6 +89,19 @@ typedef enum {
 #define PICC_RESTORE					0xC2   // transfer block data to the buffer
 #define PICC_TRANSFER					0xB0   // save the data in the buffer
 #define PICC_HALT						0x50   // Sleep
+
+typedef enum{
+	PICC_TYPE_NOT_COMPLETE = 0,
+	PICC_TYPE_MIFARE_MINI,
+	PICC_TYPE_MIFARE_1K,
+	PICC_TYPE_MIFARE_4K,
+	PICC_TYPE_MIFARE_UL,
+	PICC_TYPE_MIFARE_PLUS,
+	PICC_TYPE_TNP3XXX,
+	PICC_TYPE_ISO_14443_4,
+	PICC_TYPE_ISO_18092,
+	PICC_TYPE_UNKNOWN
+} PICC_TYPE_t;
 
 //MFRC Registers
 //Page 0: Command and Status
@@ -222,5 +236,7 @@ extern MFRC522_Status_t MFRC522_Read(uint8_t blockAddr, uint8_t* recvData);
 extern MFRC522_Status_t MFRC522_Write(uint8_t blockAddr, uint8_t* writeData);
 extern void MFRC522_Halt(void);
 
+char *MFRC522_DumpType(PICC_TYPE_t type);
+int MFRC522_ParseType(uint8_t TagSelectRet);
 #endif
 
