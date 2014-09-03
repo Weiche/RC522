@@ -25,13 +25,12 @@ unsigned char MFRC522_HAL_read(unsigned char addr);
 void MFRC522_HAL_Delay(unsigned int ms);
 /* HAL prototypes end */
 
-int MFRC522_Init(void) {
+int MFRC522_Init( char Type ) {
 
 	MFRC522_HAL_init();
 	MFRC522_Reset();
 	MFRC522_HAL_Delay(200);
 	MFRC522_WriteRegister(MFRC522_REG_T_MODE, 0x8D);
-
 	MFRC522_WriteRegister(MFRC522_REG_T_PRESCALER, 0x3E);
 #ifndef NOTEST
 	{
@@ -48,7 +47,16 @@ int MFRC522_Init(void) {
 
 	MFRC522_WriteRegister(MFRC522_REG_TX_AUTO, 0x40);
 	MFRC522_WriteRegister(MFRC522_REG_MODE, 0x3D);
-
+	if (Type == 'A') {
+		MFRC522_ClearBitMask(MFRC522_REG_STATUS2, 0x08);
+		MFRC522_WriteRegister(MFRC522_REG_MODE, 0x3D);
+		MFRC522_WriteRegister(MFRC522_REG_RX_SELL, 0x86);
+		MFRC522_WriteRegister(MFRC522_REG_RF_CFG, 0x7F);
+		MFRC522_WriteRegister(MFRC522_REG_T_RELOAD_L, 30);
+		MFRC522_WriteRegister(MFRC522_REG_T_RELOAD_H, 0);
+		MFRC522_WriteRegister(MFRC522_REG_T_MODE, 0x8D);
+		MFRC522_WriteRegister(MFRC522_REG_T_PRESCALER, 0x3E);
+	}
 	MFRC522_AntennaOn();		//Open the antenna
 	return 0;
 }
@@ -119,8 +127,12 @@ MFRC522_Status_t MFRC522_Request(uint8_t reqMode, uint8_t* TagType) {
 	TagType[0] = reqMode;
 	status = MFRC522_ToCard(PCD_TRANSCEIVE, TagType, 1, TagType, &backBits);
 
-	if ((status != MI_OK) || (backBits != 0x10)) {
+	if ((status != MI_OK) ) {
 		status = MI_ERR;
+	}else if(backBits != 0x10){
+		status = MI_ERR;
+	}else{
+		status = MI_OK;
 	}
 
 	return status;
@@ -180,9 +192,11 @@ MFRC522_Status_t MFRC522_ToCard(uint8_t command, uint8_t* sendData,
 
 	if (i != 0) {
 		if (!(MFRC522_ReadRegister(MFRC522_REG_ERROR) & 0x1B)) {
-			status = MI_OK;
+
 			if (n & irqEn & 0x01) {
 				status = MI_NOTAGERR;
+			}else{
+				status = MI_OK;
 			}
 
 			if (command == PCD_TRANSCEIVE) {

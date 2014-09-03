@@ -172,7 +172,7 @@ typedef enum {
  * Prepare MFRC522 to work with RFIDs
  *
  */
-extern int MFRC522_Init(void);
+extern int MFRC522_Init(char Type);
 
 /**
  * Check for RFID card existance
