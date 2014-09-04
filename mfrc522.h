@@ -90,6 +90,31 @@ typedef int MFRC522_Status_t;
 #define PICC_TRANSFER					0xB0   // save the data in the buffer
 #define PICC_HALT						0x50   // Sleep
 
+typedef enum PICC_Command {
+	// The commands used by the PCD to manage communication with several PICCs (ISO 14443-3, Type A, section 6.4)
+	PICC_CMD_REQA			= 0x26,		// REQuest command, Type A. Invites PICCs in state IDLE to go to READY and prepare for anticollision or selection. 7 bit frame.
+	PICC_CMD_WUPA			= 0x52,		// Wake-UP coE		= 0xC2,		// Reads thE		= 0xC2,		// Reads the contents of a block into the internal data register.e contents of a block into the internal data register.mmand, Type A. Invites PICCs in state IDLE and HALT to go to READY(*) and prepare for anticollision or selection. 7 bit frame.
+	PICC_CMD_CT				= 0x88,		// Cascade Tag. Not really a command, but used during anti collision.
+	PICC_CMD_SEL_CL1		= 0x93,		// Anti collision/Select, Cascade Level 1
+	PICC_CMD_SEL_CL2		= 0x95,		// Anti collision/Select, Cascade Level 1
+	PICC_CMD_SEL_CL3		= 0x97,		// Anti collision/Select, Cascade Level 1
+	PICC_CMD_HALT			= 0x50,		// HaLT command, Type A. Instructs an ACTIVE PICC to go to state HALT.
+	// The commands used for MIFARE Classic (from http://www.nxp.com/documents/data_sheet/MF1S503x.pdf, Section 9)
+	// Use PCD_MFAuthent to authenticate access to a sector, then use these commands to read/write/modify the blocks on the sector.
+	// The read/write commands can also be used for MIFARE Ultralight.
+	PICC_CMD_MF_AUTH_KEY_A	= 0x60,		// Perform authentication with Key A
+	PICC_CMD_MF_AUTH_KEY_B	= 0x61,		// Perform authentication with Key B
+	PICC_CMD_MF_READ		= 0x30,		// Reads one 16 byte block from the authenticated sector of the PICC. Also used for MIFARE Ultralight.
+	PICC_CMD_MF_WRITE		= 0xA0,		// Writes one 16 byte block to the authenticated sector of the PICC. Called "COMPATIBILITY WRITE" for MIFARE Ultralight.
+	PICC_CMD_MF_DECREMENT	= 0xC0,		// Decrements the contents of a block and stores the result in the internal data register.
+	PICC_CMD_MF_INCREMENT	= 0xC1,		// Increments the contents of a block and stores the result in the internal data register.
+	PICC_CMD_MF_RESTORE		= 0xC2,		// Reads the contents of a block into the internal data register.
+	PICC_CMD_MF_TRANSFER	= 0xB0,		// Writes the contents of the internal data register to a block.
+	// The commands used for MIFARE Ultralight (from http://www.nxp.com/documents/data_sheet/MF0ICU1.pdf, Section 8.6)
+	// The PICC_CMD_MF_READ and PICC_CMD_MF_WRITE can also be used for MIFARE Ultralight.
+	PICC_CMD_UL_WRITE		= 0xA2		// Writes one 4 byte page to the PICC.
+}PICC_CMD_t;
+
 typedef enum{
 	PICC_TYPE_NOT_COMPLETE = 0,
 	PICC_TYPE_MIFARE_MINI,
@@ -237,7 +262,17 @@ extern MFRC522_Status_t MFRC522_Read(uint8_t blockAddr, uint8_t* recvData);
 extern MFRC522_Status_t MFRC522_Write(uint8_t blockAddr, uint8_t* writeData);
 extern void MFRC522_Halt(void);
 
-char *MFRC522_DumpType(PICC_TYPE_t type);
+char *MFRC522_TypeToString(PICC_TYPE_t type);
 int MFRC522_ParseType(uint8_t TagSelectRet);
+
+#ifndef RELEASE
+#include <stddef.h>
+const void *dump(const void *addr, size_t bytes);
+int __Dump_Sector(uint8_t *CardID, uint8_t sector_addr);
+int MFRC522_CardDump(uint8_t *CardID);
+extern const char* Reg_ToString[];
+void MFRC522_RegDump(uint8_t Reg_Addr);
+#endif
+
 #endif
 

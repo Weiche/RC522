@@ -29,7 +29,7 @@ static int Checking_Card = 0;
 int MFRC522_Setup(char Type){
 	MFRC522_Reset();
 	MFRC522_HAL_Delay(200);
-	MFRC522_WriteRegister(MFRC522_REG_T_MODE, 0x8D);
+
 	MFRC522_WriteRegister(MFRC522_REG_T_PRESCALER, 0x3E);
 #ifndef NOTEST
 	{
@@ -41,9 +41,9 @@ int MFRC522_Setup(char Type){
 		}
 	}
 #endif
+	MFRC522_WriteRegister(MFRC522_REG_T_MODE, 0x8D);
 	MFRC522_WriteRegister(MFRC522_REG_T_RELOAD_L, 30);
 	MFRC522_WriteRegister(MFRC522_REG_T_RELOAD_H, 0);
-
 	MFRC522_WriteRegister(MFRC522_REG_TX_AUTO, 0x40);
 	MFRC522_WriteRegister(MFRC522_REG_MODE, 0x3D);
 	if (Type == 'A') {
@@ -68,16 +68,17 @@ int MFRC522_Init(char Type) {
 
 MFRC522_Status_t MFRC522_Check(uint8_t* id) {
 	MFRC522_Status_t status;
+	/* Must Clear Bit MFCrypto1On in Status2 reg in order to return to the card detect mode*/
+	MFRC522_ClearBitMask(MFRC522_REG_STATUS2,(1<<3));
 	Checking_Card = 1;
 	//Find cards, return card type
-	status = MFRC522_Request(PICC_REQIDL, id);
+	status = MFRC522_Request(PICC_CMD_WUPA, id);
 	Checking_Card = 0;
 	if (status == MI_OK) {
 		//Card detected
 		//Anti-collision, return card serial number 4 bytes
 		status = MFRC522_Anticoll(id);
 	}
-
 	return status;
 }
 
@@ -134,14 +135,12 @@ MFRC522_Status_t MFRC522_Request(uint8_t reqMode, uint8_t* TagType) {
 	status = MFRC522_ToCard(PCD_TRANSCEIVE, TagType, 1, TagType, &backBits);
 
 	if ((status != MI_OK)) {
-		status = MI_ERR;
-	} else if (backBits != 0x10) {
-		status = MI_ERR;
-	} else {
-		status = MI_OK;
+		return status;
 	}
-
-	return status;
+	if (backBits != 0x10) {
+		return MI_ERR;
+	}
+	return MI_OK;
 }
 
 MFRC522_Status_t MFRC522_ToCard(uint8_t command, uint8_t* sendData,
@@ -404,13 +403,23 @@ void MFRC522_Halt(void) {
 	MFRC522_CalculateCRC(buff, 2, &buff[2]);
 
 	MFRC522_ToCard(PCD_TRANSCEIVE, buff, 4, buff, &unLen);
-}
 
+}
+void MFRC522_WakeUp(void){
+	uint16_t unLen;
+	uint8_t buff[4];
+
+	buff[0] = PICC_HALT;
+	buff[1] = 0;
+	MFRC522_CalculateCRC(buff, 2, &buff[2]);
+
+	MFRC522_ToCard(PCD_TRANSCEIVE, buff, 4, buff, &unLen);
+}
 char *PICC_TYPE_STRING[] = { "PICC_TYPE_NOT_COMPLETE", "PICC_TYPE_MIFARE_MINI",
 		"PICC_TYPE_MIFARE_1K", "PICC_TYPE_MIFARE_4K", "PICC_TYPE_MIFARE_UL",
 		"PICC_TYPE_MIFARE_PLUS", "PICC_TYPE_TNP3XXX", "PICC_TYPE_ISO_14443_4",
 		"PICC_TYPE_ISO_18092", "PICC_TYPE_UNKNOWN" };
-char *MFRC522_DumpType(PICC_TYPE_t type) {
+char *MFRC522_TypeToString(PICC_TYPE_t type) {
 	return PICC_TYPE_STRING[type];
 }
 int MFRC522_ParseType(uint8_t TagSelectRet) {
