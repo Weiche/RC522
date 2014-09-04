@@ -26,9 +26,7 @@ void MFRC522_HAL_Delay(unsigned int ms);
 
 /* HAL prototypes end */
 static int Checking_Card = 0;
-int MFRC522_Init(char Type) {
-
-	MFRC522_HAL_init();
+int MFRC522_Setup(char Type){
 	MFRC522_Reset();
 	MFRC522_HAL_Delay(200);
 	MFRC522_WriteRegister(MFRC522_REG_T_MODE, 0x8D);
@@ -60,6 +58,12 @@ int MFRC522_Init(char Type) {
 	}
 	MFRC522_AntennaOn();		//Open the antenna
 	return 0;
+}
+int MFRC522_Init(char Type) {
+
+	MFRC522_HAL_init();
+
+	return MFRC522_Setup(Type);
 }
 
 MFRC522_Status_t MFRC522_Check(uint8_t* id) {

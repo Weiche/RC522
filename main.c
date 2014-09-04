@@ -89,6 +89,28 @@ int dump_sector(uint8_t *CardID, uint8_t sector_addr) {
 
 
 }
+int MFRC522_CardDump(uint8_t *CardID){
+	MFRC522_Status_t ret;
+	int ret_int = 0;
+	printf("Card detected    0x%02X 0x%02X 0x%02X 0x%02X, Check Sum = 0x%02X\r\n",
+			CardID[0], CardID[1], CardID[2], CardID[3], CardID[4]);
+	ret_int = MFRC522_SelectTag(CardID);
+	if (ret_int == 0) {
+		printf("Card Select Failed\r\n");
+		return -1;
+	} else {
+		printf("Card Selected, Type:%s\r\n", MFRC522_DumpType(MFRC522_ParseType(ret_int)));
+	}
+
+	ret_int = 0;
+	{
+		int i;
+		for (i = 0x0; i < 0x40; i+=4) {
+			ret_int |= dump_sector(CardID, i);
+		}
+	}
+	return 0;
+}
 int main(void) {
 	MFRC522_Status_t ret;
 	int ret_int;
@@ -104,27 +126,13 @@ int main(void) {
 
 		//If any card detected
 		if (MFRC522_Check(CardID) == MI_OK) {
-			printf("Card detected    0x%02X 0x%02X 0x%02X 0x%02X, Check Sum = 0x%02X\r\n",
-					CardID[0], CardID[1], CardID[2], CardID[3], CardID[4]);
-			ret_int = MFRC522_SelectTag(CardID);
-			if (ret_int == 0) {
-				printf("Card Select Failed\r\n");
-				goto End;
-			} else {
-				printf("Card Selected, Type:%s\r\n", MFRC522_DumpType(MFRC522_ParseType(ret_int)));
-			}
-			{
-				int i;
-				for (i = 0x0; i < 0x40; i+=4) {
-					dump_sector(CardID, i);
-				}
-			}
+			MFRC522_CardDump(CardID);
 		}
 		End:
 		fflush(stdout);
 		MFRC522_Halt();
+		MFRC522_Setup('A');
 		usleep(500 * 1000);
-		break;
 	}
 	return 0;
 }

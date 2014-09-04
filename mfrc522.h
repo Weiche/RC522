@@ -225,6 +225,7 @@ extern void MFRC522_ClearBitMask(uint8_t reg, uint8_t mask);
 extern void MFRC522_AntennaOn(void);
 extern void MFRC522_AntennaOff(void);
 extern void MFRC522_Reset(void);
+int MFRC522_Setup(char Type);
 extern MFRC522_Status_t MFRC522_Request(uint8_t reqMode, uint8_t* TagType);
 extern MFRC522_Status_t MFRC522_ToCard(uint8_t command, uint8_t* sendData, uint8_t sendLen, uint8_t* backData, uint16_t* backLen);
 extern MFRC522_Status_t MFRC522_Anticoll(uint8_t* serNum);
