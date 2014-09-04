@@ -186,9 +186,9 @@ MFRC522_Status_t MFRC522_ToCard(uint8_t command, uint8_t* sendData,
 	do {
 		//CommIrqReg[7..0]
 		//Set1 TxIRq RxIRq IdleIRq HiAlerIRq LoAlertIRq ErrIRq TimerIRq
-		if( Checking_Card ){
+		if (Checking_Card) {
 			MFRC522_HAL_Delay(16);
-		}else{
+		} else {
 			MFRC522_HAL_Delay(2);
 		}
 		n = MFRC522_ReadRegister(MFRC522_REG_COMM_IRQ);
@@ -345,7 +345,7 @@ MFRC522_Status_t MFRC522_Read(uint8_t blockAddr, uint8_t* recvData) {
 	status = MFRC522_ToCard(PCD_TRANSCEIVE, recvData, 4, recvData, &unLen);
 
 	if ((status != MI_OK) || (unLen != 0x90)) {
-		status = MI_ERR;
+		return MI_ERR;
 	}
 
 	return unLen;
@@ -363,7 +363,7 @@ MFRC522_Status_t MFRC522_Write(uint8_t blockAddr, uint8_t* writeData) {
 	status = MFRC522_ToCard(PCD_TRANSCEIVE, buff, 4, buff, &recvBits);
 
 	if ((status != MI_OK) || (recvBits != 4) || ((buff[0] & 0x0F) != 0x0A)) {
-		status = MI_ERR;
+		goto ERROR;
 	}
 
 	if (status == MI_OK) {
@@ -376,10 +376,18 @@ MFRC522_Status_t MFRC522_Write(uint8_t blockAddr, uint8_t* writeData) {
 
 		if ((status != MI_OK) || (recvBits != 4)
 				|| ((buff[0] & 0x0F) != 0x0A)) {
-			status = MI_ERR;
+				goto ERROR;
+
 		}
 	}
+	return MI_OK;
 
+	ERROR:
+	if (recvBits == 4) {
+		status = buff[0] & 0x0F;
+	} else {
+		status = MI_ERR;
+	}
 	return status;
 }
 
@@ -394,19 +402,11 @@ void MFRC522_Halt(void) {
 	MFRC522_ToCard(PCD_TRANSCEIVE, buff, 4, buff, &unLen);
 }
 
-char *PICC_TYPE_STRING[] = {
-		"PICC_TYPE_NOT_COMPLETE",
-		"PICC_TYPE_MIFARE_MINI",
-		"PICC_TYPE_MIFARE_1K",
-		"PICC_TYPE_MIFARE_4K",
-		"PICC_TYPE_MIFARE_UL",
-		"PICC_TYPE_MIFARE_PLUS",
-		"PICC_TYPE_TNP3XXX",
-		"PICC_TYPE_ISO_14443_4",
-		"PICC_TYPE_ISO_18092",
-		"PICC_TYPE_UNKNOWN"
-};
-char *MFRC522_DumpType(PICC_TYPE_t type){
+char *PICC_TYPE_STRING[] = { "PICC_TYPE_NOT_COMPLETE", "PICC_TYPE_MIFARE_MINI",
+		"PICC_TYPE_MIFARE_1K", "PICC_TYPE_MIFARE_4K", "PICC_TYPE_MIFARE_UL",
+		"PICC_TYPE_MIFARE_PLUS", "PICC_TYPE_TNP3XXX", "PICC_TYPE_ISO_14443_4",
+		"PICC_TYPE_ISO_18092", "PICC_TYPE_UNKNOWN" };
+char *MFRC522_DumpType(PICC_TYPE_t type) {
 	return PICC_TYPE_STRING[type];
 }
 int MFRC522_ParseType(uint8_t TagSelectRet) {

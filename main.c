@@ -45,13 +45,14 @@ const void *dump(const void *addr, size_t bytes) {
 }
 int dump_sector(uint8_t *CardID, uint8_t sector_addr) {
 	int ret;
-	char buffer[1024];
+	char buffer[1024] = "";
 	uint8_t SectorKeyA[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 	uint8_t SectorKeyB[6] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 	uint8_t *SectorKey;
+	uint8_t Write_Data[] = "GitetsuTokyoTech";
 	SectorKey = SectorKeyA;
 
-	printf("Auth Sector (0x%02X) with key 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X ",
+	printf("Auth Sector (0x%02X) with key 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X ...",
 			sector_addr, SectorKey[0], SectorKey[1], SectorKey[2], SectorKey[3],
 			SectorKey[4]);
 
@@ -59,22 +60,34 @@ int dump_sector(uint8_t *CardID, uint8_t sector_addr) {
 			(uint8_t*) SectorKey , (uint8_t*) CardID);
 	if (ret == MI_OK) {
 		printf("OK\r\n");
+#ifdef TEST_WRITE
+		printf("Try to write block 1 with 16 byte data...");
+		ret = MFRC522_Write(0x01,Write_Data);
+		if( ret == MI_OK ){
+			puts("OK");
+		}else{
+			printf("Failed, error 0x%02X\r\n",ret);
+		}
+#endif
+		printf("Read block address 0x00 ....");
+		ret = MFRC522_Read(sector_addr + 0x00, buffer);
+		ret += MFRC522_Read(sector_addr + 0x01, buffer + ret / 8);
+		ret += MFRC522_Read(sector_addr + 0x02, buffer + ret / 8);
+		ret += MFRC522_Read(sector_addr + 0x03, buffer + ret / 8);
+		if (ret <= 0) {
+			printf("Failed\r\n");
+		} else {
+			printf("OK read %d bits\r\n", ret);
+			dump(buffer, ret / 8);
+		}
+		return 0;
 	} else {
 		printf("Failed\r\n");
+		return -1;
 	}
 
-	printf("Read block address 0x00 ....");
-	ret = MFRC522_Read(0x00, buffer);
-	ret += MFRC522_Read(0x01, buffer + ret / 8);
-	ret += MFRC522_Read(0x02, buffer + ret / 8);
-	ret += MFRC522_Read(0x03, buffer + ret / 8);
-	if (ret <= 0) {
-		printf("Failed\r\n");
-	} else {
-		printf("OK read %d bits\r\n", ret);
-		dump(buffer, ret / 8);
-	}
-	return 0;
+
+
 }
 int main(void) {
 	MFRC522_Status_t ret;
@@ -84,17 +97,14 @@ int main(void) {
 
 	//My cards id
 	//I read them with program below, and write this here
-	uint8_t MyID[5] = { 0x43, 0xdc, 0x52, 0xb6, 0x7b    //My card on my keys
-			};
 	uint8_t sector_addr;
 
 	MFRC522_Init('A');
-	sector_addr = 1;
 	while (1) {
 
 		//If any card detected
 		if (MFRC522_Check(CardID) == MI_OK) {
-			printf("Card detected    0x%02X 0x%02X 0x%02X 0x%02X 0x%02X\r\n",
+			printf("Card detected    0x%02X 0x%02X 0x%02X 0x%02X, Check Sum = 0x%02X\r\n",
 					CardID[0], CardID[1], CardID[2], CardID[3], CardID[4]);
 			ret_int = MFRC522_SelectTag(CardID);
 			if (ret_int == 0) {
@@ -105,16 +115,16 @@ int main(void) {
 			}
 			{
 				int i;
-				for (i = 0x00; i < 0x4; i++) {
+				for (i = 0x0; i < 0x40; i+=4) {
 					dump_sector(CardID, i);
 				}
-
 			}
 		}
 		End:
 		fflush(stdout);
 		MFRC522_Halt();
 		usleep(500 * 1000);
+		break;
 	}
 	return 0;
 }
