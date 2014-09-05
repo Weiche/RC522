@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <getopt.h>
+#include <stdlib.h>
 #include "mfrc522.h"
 #define DISP_COMMANDLINE()	printf("RC522>")
 int main(int argc, char **argv) {
@@ -25,7 +26,7 @@ int main(int argc, char **argv) {
 
 	ret = MFRC522_Init('A');
 	if (ret < 0) {
-		perror("Failed to init");
+		perror("Failed to initialize");
 		exit(-1);
 	}
 
