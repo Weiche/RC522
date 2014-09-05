@@ -34,14 +34,21 @@ int main(int argc, char **argv) {
 
 	while (1) {
 		DISP_COMMANDLINE();
-		fflush(stdin);
+
 		scanf("%s", command_buffer);
 		if (strcmp(command_buffer, "scan") == 0) {
 			puts("Scanning");
 			while (1) {
 				ret = MFRC522_Check(CardID);
 				if (ret == MI_OK) {
-					MFRC522_CardDump(CardID);
+					char input[32];
+					printf("Find Card... dump it?(y/n)");
+					scanf("%s",input);
+					if( input[0] == 'y' || input[0] == 'Y'){
+						MFRC522_CardDump(CardID);
+					}else{
+						puts("Cancel");
+					}
 					break;
 				} else {
 					printf(".");
@@ -54,9 +61,9 @@ int main(int argc, char **argv) {
 		} else if (strcmp(command_buffer, "quit") == 0 || strcmp(command_buffer, "exit") == 0 ) {
 			return 0;
 		} else {
-			puts("Unknow command");
+			puts("Unknown command");
 			puts("scan:scan card and dump");
-			puts("quit:exit programe");
+			puts("quit:exit program");
 		}
 
 	}
