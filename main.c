@@ -14,18 +14,13 @@
 #include "mfrc522.h"
 #define DISP_COMMANDLINE()	printf("RC522>")
 
-int scan_loop(char *CardID);
-int tag_select(char *CardID);
+int scan_loop(uint8_t *CardID);
+int tag_select(uint8_t *CardID);
 int main(int argc, char **argv) {
 	MFRC522_Status_t ret;
-	int ret_int;
 	//Recognized card ID
 	uint8_t CardID[5] = { 0x00, };
-	uint8_t sector_addr;
 	static char command_buffer[1024];
-	static int command_argc = 0;
-	static char *command_argv[256];
-	char *tp;
 
 	ret = MFRC522_Init('A');
 	if (ret < 0) {
@@ -72,7 +67,7 @@ int main(int argc, char **argv) {
 		/*Main Loop End*/
 	}
 }
-int scan_loop(char *CardID) {
+int scan_loop(uint8_t *CardID) {
 
 	while (1) {
 
@@ -81,7 +76,7 @@ int scan_loop(char *CardID) {
 		DISP_COMMANDLINE();
 		printf("%02X%02X%02X%02X>", CardID[0], CardID[1], CardID[2], CardID[3]);
 		scanf("%s", input);
-		puts(input);
+		puts((char*)input);
 		if (strcmp(input, "halt") == 0) {
 			return 1;
 		} else if (strcmp(input, "dump") == 0) {
@@ -115,7 +110,7 @@ int scan_loop(char *CardID) {
 	return 0;
 
 }
-int tag_select(char *CardID) {
+int tag_select(uint8_t *CardID) {
 	int ret_int;
 	printf(
 			"Card detected    0x%02X 0x%02X 0x%02X 0x%02X, Check Sum = 0x%02X\r\n",

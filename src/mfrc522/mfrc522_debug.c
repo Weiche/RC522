@@ -6,10 +6,9 @@
 #include "mfrc522.h"
 #include "dump.h"
 int MFRC522_Debug_DumpSector(uint8_t *CardID, uint8_t block_addr) {
-	int ret, i, end;
-	char buffer[1024] = "";
+	int ret, i;
+	uint8_t buffer[1024] = "";
 	uint8_t SectorKeyA[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-	uint8_t SectorKeyB[6] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 	uint8_t *SectorKey;
 	SectorKey = SectorKeyA;
 
@@ -47,7 +46,7 @@ int MFRC522_Debug_DumpSector(uint8_t *CardID, uint8_t block_addr) {
 int MFRC522_Debug_Write(const char blockaddr, const char *Write_Data,
 		const int len) {
 	int ret;
-	char buffer[16] = "";
+	uint8_t buffer[16] = "";
 	printf("Try to write block %d with %d byte data...", blockaddr, len);
 	if (blockaddr == 0 || (blockaddr % 4) == 0x03) {
 		puts("cannot write control block");
