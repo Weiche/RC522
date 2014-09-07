@@ -84,7 +84,7 @@ int scan_loop(uint8_t *CardID) {
 				return -1;
 		} else if (strcmp(input, "read") == 0) {
 			scanf("%d", &block_start);
-			if (MFRC522_Debug_DumpSector(CardID, block_start) < 0) {
+			if (MFRC522_Debug_DumpBlocks(CardID, block_start) < 0) {
 				return -1;
 			}
 		} else if (strcmp(input, "writestr") == 0) {
@@ -96,7 +96,7 @@ int scan_loop(uint8_t *CardID) {
 			printf(">");
 			len = scanf("%s",write_buffer);
 			if (len >= 0) {
-				if (MFRC522_Debug_Write(block_start, write_buffer,
+				if (MFRC522_Debug_Write(CardID ,block_start, write_buffer,
 						strlen(write_buffer)) < 0) {
 					return -1;
 				}

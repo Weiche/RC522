@@ -5,20 +5,20 @@
 #include <ctype.h>
 #include "mfrc522.h"
 #include "dump.h"
-int MFRC522_Debug_DumpSector(uint8_t *CardID, uint8_t block_addr) {
+int MFRC522_Debug_Auth(uint8_t *CardID, uint8_t block_addr){
+	uint8_t SectorKey[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+	printf(
+				"Auth Block (0x%02X) with key 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X ...",
+				block_addr, SectorKey[0], SectorKey[1], SectorKey[2], SectorKey[3],
+				SectorKey[4]);
+	return MFRC522_Auth((uint8_t) PICC_AUTHENT1A, (uint8_t) block_addr,
+				(uint8_t*) SectorKey, (uint8_t*) CardID);
+}
+int MFRC522_Debug_DumpBlocks(uint8_t *CardID, uint8_t block_addr) {
 	int ret, i;
 	uint8_t buffer[1024] = "";
-	uint8_t SectorKeyA[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
-	uint8_t *SectorKey;
-	SectorKey = SectorKeyA;
 
-	printf(
-			"Auth Block (0x%02X) with key 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X ...",
-			block_addr, SectorKey[0], SectorKey[1], SectorKey[2], SectorKey[3],
-			SectorKey[4]);
-
-	ret = MFRC522_Auth((uint8_t) PICC_AUTHENT1A, (uint8_t) block_addr,
-			(uint8_t*) SectorKey, (uint8_t*) CardID);
+	ret = MFRC522_Debug_Auth((uint8_t*) CardID,block_addr);
 	if (ret == MI_OK) {
 		printf("OK\r\n");
 
@@ -43,10 +43,11 @@ int MFRC522_Debug_DumpSector(uint8_t *CardID, uint8_t block_addr) {
 	}
 
 }
-int MFRC522_Debug_Write(const char blockaddr, const char *Write_Data,
+int MFRC522_Debug_Write(uint8_t *CardID,const char blockaddr, const char *Write_Data,
 		const int len) {
 	int ret;
 	uint8_t buffer[16] = "";
+	ret = MFRC522_Debug_Auth((uint8_t*) CardID,blockaddr);
 	printf("Try to write block %d with %d byte data...", blockaddr, len);
 	if (blockaddr == 0 || (blockaddr % 4) == 0x03) {
 		puts("cannot write control block");
@@ -69,7 +70,7 @@ int MFRC522_Debug_CardDump(uint8_t *CardID) {
 	{
 		int i;
 		for (i = 0x0; i < 0x40; i += 4) {
-			ret_int |= MFRC522_Debug_DumpSector(CardID, i);
+			ret_int |= MFRC522_Debug_DumpBlocks(CardID, i);
 		}
 	}
 	return ret_int;

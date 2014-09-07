@@ -57,9 +57,12 @@
  * Used with most functions
  */
 
-#define 	MI_OK		(0)
-#define 	MI_NOTAGERR (-1)
-#define 	MI_ERR		(-2)
+#define 	MI_OK			(0)
+#define 	MI_NOTAGERR		(-1)
+#define 	MI_ERR			(-2)
+#define		MI_SELECTERR	(-3)
+#define		MI_AUTHERR		(-4)
+#define		MI_RWERR		(-5)
 
 typedef int MFRC522_Status_t;
 
@@ -265,11 +268,11 @@ extern void MFRC522_Halt(void);
 char *MFRC522_TypeToString(PICC_TYPE_t type);
 int MFRC522_ParseType(uint8_t TagSelectRet);
 
-int MFRC522_Debug_DumpSector(uint8_t *CardID, uint8_t sector_addr);
+int MFRC522_Debug_DumpBlocks(uint8_t *CardID, uint8_t sector_addr);
 int MFRC522_Debug_CardDump(uint8_t *CardID);
 extern const char* __Reg_ToString[];
 void MFRC522_Debug_RegDump(uint8_t Reg_Addr);
-int MFRC522_Debug_Write(const char blockaddr, const char *Write_Data,
+int MFRC522_Debug_Write(uint8_t *CardID,const char blockaddr, const char *Write_Data,
 		const int len);
 
 #endif
