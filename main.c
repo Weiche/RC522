@@ -91,9 +91,10 @@ int scan_loop(uint8_t *CardID) {
 			char write_buffer[256], c;
 			size_t len = 0;
 			scanf("%d", &block_start);
-			while ((c = getchar()) != '\n' && c != EOF)
+			while ((c = getchar()) != '\n')
 				;
 			printf(">");
+			len = scanf("%s",write_buffer);
 			if (len >= 0) {
 				if (MFRC522_Debug_Write(block_start, write_buffer,
 						strlen(write_buffer)) < 0) {
