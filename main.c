@@ -13,6 +13,22 @@
 #include <stdlib.h>
 #include "mfrc522.h"
 #define DISP_COMMANDLINE()	printf("RC522>")
+int tag_select(char *CardID) {
+	int ret_int;
+	printf(
+			"Card detected    0x%02X 0x%02X 0x%02X 0x%02X, Check Sum = 0x%02X\r\n",
+			CardID[0], CardID[1], CardID[2], CardID[3], CardID[4]);
+	ret_int = MFRC522_SelectTag(CardID);
+	if (ret_int == 0) {
+		printf("Card Select Failed\r\n");
+		return -1;
+	} else {
+		printf("Card Selected, Type:%s\r\n",
+				MFRC522_TypeToString(MFRC522_ParseType(ret_int)));
+	}
+	ret_int = 0;
+	return ret_int;
+}
 int main(int argc, char **argv) {
 	MFRC522_Status_t ret;
 	int ret_int;
@@ -33,6 +49,7 @@ int main(int argc, char **argv) {
 	printf("User Space RC522 Application\r\n");
 
 	while (1) {
+		/*Main Loop Start*/
 		DISP_COMMANDLINE();
 
 		scanf("%s", command_buffer);
@@ -40,31 +57,74 @@ int main(int argc, char **argv) {
 			puts("Scanning");
 			while (1) {
 				ret = MFRC522_Check(CardID);
-				if (ret == MI_OK) {
-					char input[32];
-					printf("Find Card... dump it?(y/n)");
-					scanf("%s",input);
-					if( input[0] == 'y' || input[0] == 'Y'){
-						MFRC522_CardDump(CardID);
-					}else{
-						puts("Cancel");
-					}
-					break;
-				} else {
+				if( ret != MI_OK){
 					printf(".");
+					fflush(stdout);
+					continue;
 				}
-				fflush(stdout);
-				MFRC522_Halt();
-				usleep(500 * 1000);
+				ret |= tag_select(CardID);
+				if (ret == MI_OK) {
+					ret = scan_loop(CardID);
+					if (ret < 0) {
+						goto END_SCAN;
+					}else if(ret == 1){
+						goto HALT;
+					}
+				}
 			}
-
-		} else if (strcmp(command_buffer, "quit") == 0 || strcmp(command_buffer, "exit") == 0 ) {
+			END_SCAN: printf("Card error...");
+			HALT:puts("Halt");
+		} else if (strcmp(command_buffer, "quit") == 0
+				|| strcmp(command_buffer, "exit") == 0) {
 			return 0;
 		} else {
 			puts("Unknown command");
 			puts("scan:scan card and dump");
 			puts("quit:exit program");
 		}
-
+		/*Main Loop End*/
 	}
+}
+int scan_loop(char *CardID) {
+
+	while (1) {
+
+		char input[32];
+		int block_start;
+		DISP_COMMANDLINE();
+		printf("%02X%02X%02X%02X>", CardID[0], CardID[1], CardID[2], CardID[3]);
+		scanf("%s", input);
+		puts(input);
+		if (strcmp(input, "halt") == 0) {
+			return 1;
+		} else if (strcmp(input, "dump") == 0) {
+			if (MFRC522_Debug_CardDump(CardID) < 0)
+				return -1;
+		} else if (strcmp(input, "read") == 0) {
+			scanf("%d", &block_start);
+			if (MFRC522_Debug_DumpSector(CardID, block_start) < 0) {
+				return -1;
+			}
+		} else if (strcmp(input, "writestr") == 0) {
+			char write_buffer[256], c;
+			size_t len = 0;
+			scanf("%d", &block_start);
+			while ((c = getchar()) != '\n' && c != EOF)
+				;
+			printf(">");
+			if (len >= 0) {
+				if (MFRC522_Debug_Write(block_start, write_buffer,
+						strlen(write_buffer)) < 0) {
+					return -1;
+				}
+			}
+		} else {
+
+			printf(
+					"Usage:\r\n" "\tread <blockstart> <blocknum>\r\n" "\tdump\r\n");
+			return 0;
+		}
+	}
+	return 0;
+
 }

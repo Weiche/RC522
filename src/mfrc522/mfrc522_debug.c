@@ -4,106 +4,78 @@
 #include <string.h>
 #include <ctype.h>
 #include "mfrc522.h"
-#define WIDTH   (18)
-#ifndef RELEASE
-const void *dump(const void *addr, size_t bytes) {
-	const unsigned char *p = addr;
-	char text[WIDTH + 1];
-	unsigned i = 0;
-
-	while (i < bytes) {
-		if ((i % WIDTH) == 0) {
-			printf("%6d: ", i);
-
-			memset(text, '\0', sizeof(text));
-		}
-
-		printf("%02x ", *p);
-
-		text[i % WIDTH] = isprint(*p) ? *p : '.';
-
-		p++;
-		i++;
-
-		if ((i % WIDTH) == 0) {
-			printf(": %s\n", text);
-		}
-	}
-
-	if ((i % WIDTH) != 0) {
-		printf("%*s: %s\n", (WIDTH - (i % WIDTH)) * 3, " ", text);
-	}
-
-	return addr;
-}
-int __Dump_Sector(uint8_t *CardID, uint8_t sector_addr) {
-	int ret;
+#include "dump.h"
+int MFRC522_Debug_DumpSector(uint8_t *CardID, uint8_t block_addr) {
+	int ret, i, end;
 	char buffer[1024] = "";
 	uint8_t SectorKeyA[6] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
 	uint8_t SectorKeyB[6] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 	uint8_t *SectorKey;
-	uint8_t Write_Data[] = "GitetsuTokyoTech";
 	SectorKey = SectorKeyA;
 
 	printf(
-			"Auth Sector (0x%02X) with key 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X ...",
-			sector_addr, SectorKey[0], SectorKey[1], SectorKey[2], SectorKey[3],
+			"Auth Block (0x%02X) with key 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X ...",
+			block_addr, SectorKey[0], SectorKey[1], SectorKey[2], SectorKey[3],
 			SectorKey[4]);
 
-	ret = MFRC522_Auth((uint8_t) PICC_AUTHENT1A, (uint8_t) sector_addr,
+	ret = MFRC522_Auth((uint8_t) PICC_AUTHENT1A, (uint8_t) block_addr,
 			(uint8_t*) SectorKey, (uint8_t*) CardID);
 	if (ret == MI_OK) {
 		printf("OK\r\n");
-#ifdef TEST_WRITE
-		printf("Try to write block 1 with 16 byte data...");
-		ret = MFRC522_Write(0x01,Write_Data);
-		if( ret == MI_OK ) {
-			puts("OK");
-		} else {
-			printf("Failed, error 0x%02X\r\n",ret);
+
+		i = 0;
+		for (i = 0; i < (4 - block_addr % 4); i++) {
+			printf("Read block address 0x%02X ....", block_addr + i);
+			ret = MFRC522_Read(block_addr + i, buffer + i * 16);
+			if (ret <= 0) {
+				printf("Failed\r\n");
+				return -1;
+			} else {
+				printf("OK read %d bits\r\n", ret);
+			}
 		}
-#endif
-		printf("Read block address 0x00 ....");
-		ret = MFRC522_Read(sector_addr + 0x00, buffer);
-		ret += MFRC522_Read(sector_addr + 0x01, buffer + ret / 8);
-		ret += MFRC522_Read(sector_addr + 0x02, buffer + ret / 8);
-		ret += MFRC522_Read(sector_addr + 0x03, buffer + ret / 8);
-		if (ret <= 0) {
-			printf("Failed\r\n");
-		} else {
-			printf("OK read %d bits\r\n", ret);
-			dump(buffer, ret / 8);
-		}
+
+		dump(buffer, i * 16);
 		return 0;
+
 	} else {
 		printf("Failed\r\n");
 		return -1;
 	}
 
 }
-int MFRC522_CardDump(uint8_t *CardID) {
-	int ret_int = 0;
-	printf(
-			"Card detected    0x%02X 0x%02X 0x%02X 0x%02X, Check Sum = 0x%02X\r\n",
-			CardID[0], CardID[1], CardID[2], CardID[3], CardID[4]);
-	ret_int = MFRC522_SelectTag(CardID);
-	if (ret_int == 0) {
-		printf("Card Select Failed\r\n");
+int MFRC522_Debug_Write(const char blockaddr, const char *Write_Data,
+		const int len) {
+	int ret;
+	char buffer[16] = "";
+	printf("Try to write block %d with %d byte data...", blockaddr, len);
+	if (blockaddr == 0 || (blockaddr % 4) == 0x03) {
+		puts("cannot write control block");
 		return -1;
-	} else {
-		printf("Card Selected, Type:%s\r\n",
-				MFRC522_TypeToString(MFRC522_ParseType(ret_int)));
 	}
-	ret_int = 0;
+	memcpy(buffer, Write_Data, len <= 16 ? len : 16);
+	ret = MFRC522_Write(blockaddr, buffer);
+	if (ret == MI_OK) {
+		puts("OK");
+		return 0;
+	} else {
+		printf("Failed, error 0x%02X\r\n", ret);
+		return ret;
+	}
+
+}
+int MFRC522_Debug_CardDump(uint8_t *CardID) {
+	int ret_int = 0;
+
 	{
 		int i;
 		for (i = 0x0; i < 0x40; i += 4) {
-			ret_int |= __Dump_Sector(CardID, i);
+			ret_int |= MFRC522_Debug_DumpSector(CardID, i);
 		}
 	}
-	return 0;
+	return ret_int;
 }
-const char* Reg_ToString[] = {
+const char* __Reg_ToString[] = {
 //Page 0: Command and Status
 		"MFRC522_REG_RESERVED00",//0x00
 		"MFRC522_REG_COMMAND",		//0x01
@@ -173,8 +145,8 @@ const char* Reg_ToString[] = {
 		"MFRC522_REG_RESERVED33",		//0x3E
 		"MFRC522_REG_RESERVED34"		//0x3F
 		};
-void MFRC522_RegDump(uint8_t Reg_Addr) {
-	printf("Reg:%sAddr:0x%02X,Value:0x%02X\r\n", Reg_ToString[Reg_Addr],
+void MFRC522_Debug_RegDump(uint8_t Reg_Addr) {
+	printf("Reg:%sAddr:0x%02X,Value:0x%02X\r\n", __Reg_ToString[Reg_Addr],
 			Reg_Addr, MFRC522_ReadRegister(Reg_Addr));
 }
-#endif
+

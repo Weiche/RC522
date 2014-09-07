@@ -268,10 +268,10 @@ int MFRC522_ParseType(uint8_t TagSelectRet);
 #ifndef RELEASE
 #include <stddef.h>
 const void *dump(const void *addr, size_t bytes);
-int __Dump_Sector(uint8_t *CardID, uint8_t sector_addr);
-int MFRC522_CardDump(uint8_t *CardID);
-extern const char* Reg_ToString[];
-void MFRC522_RegDump(uint8_t Reg_Addr);
+int MFRC522_Debug_DumpSector(uint8_t *CardID, uint8_t sector_addr);
+int MFRC522_Debug_CardDump(uint8_t *CardID);
+extern const char* __Reg_ToString[];
+void MFRC522_Debug_RegDump(uint8_t Reg_Addr);
 #endif
 
 #endif
