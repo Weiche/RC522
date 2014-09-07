@@ -265,14 +265,12 @@ extern void MFRC522_Halt(void);
 char *MFRC522_TypeToString(PICC_TYPE_t type);
 int MFRC522_ParseType(uint8_t TagSelectRet);
 
-#ifndef RELEASE
-#include <stddef.h>
-const void *dump(const void *addr, size_t bytes);
 int MFRC522_Debug_DumpSector(uint8_t *CardID, uint8_t sector_addr);
 int MFRC522_Debug_CardDump(uint8_t *CardID);
 extern const char* __Reg_ToString[];
 void MFRC522_Debug_RegDump(uint8_t Reg_Addr);
-#endif
+int MFRC522_Debug_Write(const char blockaddr, const char *Write_Data,
+		const int len);
 
 #endif
 

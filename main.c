@@ -13,22 +13,9 @@
 #include <stdlib.h>
 #include "mfrc522.h"
 #define DISP_COMMANDLINE()	printf("RC522>")
-int tag_select(char *CardID) {
-	int ret_int;
-	printf(
-			"Card detected    0x%02X 0x%02X 0x%02X 0x%02X, Check Sum = 0x%02X\r\n",
-			CardID[0], CardID[1], CardID[2], CardID[3], CardID[4]);
-	ret_int = MFRC522_SelectTag(CardID);
-	if (ret_int == 0) {
-		printf("Card Select Failed\r\n");
-		return -1;
-	} else {
-		printf("Card Selected, Type:%s\r\n",
-				MFRC522_TypeToString(MFRC522_ParseType(ret_int)));
-	}
-	ret_int = 0;
-	return ret_int;
-}
+
+int scan_loop(char *CardID);
+int tag_select(char *CardID);
 int main(int argc, char **argv) {
 	MFRC522_Status_t ret;
 	int ret_int;
@@ -57,7 +44,7 @@ int main(int argc, char **argv) {
 			puts("Scanning");
 			while (1) {
 				ret = MFRC522_Check(CardID);
-				if( ret != MI_OK){
+				if (ret != MI_OK) {
 					printf(".");
 					fflush(stdout);
 					continue;
@@ -67,13 +54,13 @@ int main(int argc, char **argv) {
 					ret = scan_loop(CardID);
 					if (ret < 0) {
 						goto END_SCAN;
-					}else if(ret == 1){
+					} else if (ret == 1) {
 						goto HALT;
 					}
 				}
 			}
 			END_SCAN: printf("Card error...");
-			HALT:puts("Halt");
+			HALT: puts("Halt");
 		} else if (strcmp(command_buffer, "quit") == 0
 				|| strcmp(command_buffer, "exit") == 0) {
 			return 0;
@@ -121,10 +108,26 @@ int scan_loop(char *CardID) {
 		} else {
 
 			printf(
-					"Usage:\r\n" "\tread <blockstart> <blocknum>\r\n" "\tdump\r\n");
+					"Usage:\r\n" "\tread <blockstart>\r\n" "\tdump\r\n" "\twritestr <blockaddr>\r\n");
 			return 0;
 		}
 	}
 	return 0;
 
+}
+int tag_select(char *CardID) {
+	int ret_int;
+	printf(
+			"Card detected    0x%02X 0x%02X 0x%02X 0x%02X, Check Sum = 0x%02X\r\n",
+			CardID[0], CardID[1], CardID[2], CardID[3], CardID[4]);
+	ret_int = MFRC522_SelectTag(CardID);
+	if (ret_int == 0) {
+		printf("Card Select Failed\r\n");
+		return -1;
+	} else {
+		printf("Card Selected, Type:%s\r\n",
+				MFRC522_TypeToString(MFRC522_ParseType(ret_int)));
+	}
+	ret_int = 0;
+	return ret_int;
 }
