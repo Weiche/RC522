@@ -7,6 +7,7 @@
 
 #include "mfrc522.h"
 #include <stdint.h>
+#include <stddef.h>
 #include <error.h>
 
 #define S50_MAX_BYTE	(16*2 + 16*3*15)
